@@ -761,6 +761,9 @@ services.Configure<RecurringTaskOptions>(options =>
     options.Schedule.ConfigureTask<RestartInterruptedWorkflowsTask>(TimeSpan.FromSeconds(15));
 });
 
+builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+
 services.Configure<RuntimeOptions>(options => { options.InactivityThreshold = TimeSpan.FromSeconds(15); });
 services.Configure<BookmarkQueuePurgeOptions>(options => options.Ttl = TimeSpan.FromSeconds(10));
 services.Configure<CachingOptions>(options => options.CacheDuration = TimeSpan.FromDays(1));
