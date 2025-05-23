@@ -19,36 +19,53 @@ public class NovoChamado : Activity
 
         var parametros = context.WorkflowInput["Parametros"];
 
-        var payload = new
+        if (parametros is IDictionary<string, object> dict)
         {
-            Event = "NovoChamado",
-            Chamado = new
+            string? tokenUsuario = context.WorkflowInput["TokenUsuario"]?.ToString();
+            string? sistemaId = context.WorkflowInput["SistemaId"]?.ToString();
+
+            var payload = new
             {
-                TipoId = Guid.NewGuid(),
-                Numero = 123,
-                Backlog = true,
-                Titulo = "Título de exemplo",
-                Descricao = "Descrição do chamado",
-                ItemCatalogoId = Guid.NewGuid(),
-                ItemRelacionadoId = (Guid?)null,
-                Tags = "urgente,prioridade",
-                SolicitanteNome = "Guilherme",
-                SolicitanteEmail = "guilherme@empresa.com"
+                Event = "NovoChamado",
+                Chamado = new
+                {
+                    TipoId = Guid.NewGuid(),
+                    Numero = 123,
+                    Backlog = true,
+                    Titulo = "Título de exemplo",
+                    Descricao = "Descrição do chamado",
+                    ItemCatalogoId = Guid.NewGuid(),
+                    ItemRelacionadoId = (Guid?)null,
+                    Tags = "urgente,prioridade",
+                    SolicitanteNome = "Guilherme",
+                    SolicitanteEmail = "guilherme@empresa.com"
+                }
+            };
+
+            using var httpClient = new HttpClient();
+
+            if (!string.IsNullOrEmpty(tokenUsuario))
+            {
+                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenUsuario}");
             }
-        };
 
-        using var httpClient = new HttpClient();
-        var jsonPayload = JsonSerializer.Serialize(payload);
-        var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(webhookUrl, content);
+            if (!string.IsNullOrEmpty(sistemaId))
+            {
+                httpClient.DefaultRequestHeaders.Add("Sistema-Id", sistemaId);
+            }
 
-        if (response.IsSuccessStatusCode)
-        {
-            Console.WriteLine("Webhook triggered successfully.");
-        }
-        else
-        {
-            Console.WriteLine("Failed to trigger webhook.");
+            var jsonPayload = JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            var response = await httpClient.PostAsync(webhookUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Webhook triggered successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Failed to trigger webhook.");
+            }
         }
 
         await context.CompleteActivityAsync();
