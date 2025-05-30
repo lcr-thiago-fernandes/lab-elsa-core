@@ -29,7 +29,7 @@ public class AlterarSituacaoChamado : Activity
             {
                 Event = "AlterarSituacaoChamado",
                 ChamadoId = chamadoId,
-                SituacaoId = /*situacaoId*/"D9B675EA-F84F-4B5E-9209-F093DD58EFE1"
+                SituacaoId = situacaoId
             };
 
             using var httpClient = new HttpClient();

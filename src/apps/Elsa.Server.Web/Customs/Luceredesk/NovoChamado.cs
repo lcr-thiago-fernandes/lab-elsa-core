@@ -2,12 +2,16 @@
 using Elsa.Workflows;
 using System.Text;
 using System.Text.Json;
+using Elsa.Workflows.Models;
+using Elsa.Extensions;
 
 namespace Elsa.Server.Web.Customs.Luceredesk;
 
 [Activity("Lucere", "Novo chamado", DisplayName = "Novo Chamado")]
 public class NovoChamado : Activity
 {
+    public Output<string> Message { get; set; } = default!;
+
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
 
@@ -29,12 +33,12 @@ public class NovoChamado : Activity
                 Event = "NovoChamado",
                 Chamado = new
                 {
-                    TipoId = Guid.NewGuid(),
-                    Numero = 123,
+                    TipoId = Guid.Parse("b86633d0-a6c2-4c0a-af4c-6900ef81303a"),
+                    Numero = 159753,
                     Backlog = true,
                     Titulo = "Título de exemplo",
                     Descricao = "Descrição do chamado",
-                    ItemCatalogoId = Guid.NewGuid(),
+                    ItemCatalogoId = Guid.Parse("6034b604-8845-447c-97ec-5fd115c53071"),
                     ItemRelacionadoId = (Guid?)null,
                     Tags = "urgente,prioridade",
                     SolicitanteNome = "Guilherme",
@@ -60,11 +64,11 @@ public class NovoChamado : Activity
 
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine("Webhook triggered successfully.");
+                Message.Set(context, "Chamado criado com sucesso.");
             }
             else
             {
-                Console.WriteLine("Failed to trigger webhook.");
+                Message.Set(context, "Erro ao criar chamado");
             }
         }
 

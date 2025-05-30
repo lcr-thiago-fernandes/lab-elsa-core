@@ -2,12 +2,16 @@
 using Elsa.Workflows.Attributes;
 using System.Text;
 using System.Text.Json;
+using Elsa.Workflows.Models;
+using Elsa.Extensions;
 
 namespace Elsa.Server.Web.Customs.Luceredesk;
 
 [Activity("Lucere", "Atribuir responsável chamado", DisplayName = "Atribuir responsável chamado")]
 public class AtribuirResponsavelChamado : Activity
 {
+    public Output<string> Message { get; set; } = default!;
+
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
         var config = context.WorkflowExecutionContext.ServiceProvider.GetRequiredService<IConfiguration>();
@@ -29,7 +33,7 @@ public class AtribuirResponsavelChamado : Activity
             {
                 Event = "AlterarResponsavelChamado",
                 ChamadoId = chamadoId,
-                ResponsavelEmail = /*responsavelEmail*/ "guir.mantz@gmail.com"
+                ResponsavelEmail = responsavelEmail
             };
 
             using var httpClient = new HttpClient();
@@ -49,11 +53,11 @@ public class AtribuirResponsavelChamado : Activity
 
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine("Webhook triggered successfully.");
+                Message.Set(context, "Responsável atribuído com sucesso.");
             }
             else
             {
-                Console.WriteLine("Failed to trigger webhook.");
+                Message.Set(context, "Erro ao atribuir responsável.");
             }
         }
 
