@@ -50,14 +50,17 @@ public class AtribuirResponsavelChamado : Activity
             var jsonPayload = JsonSerializer.Serialize(payload);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             var response = await httpClient.PostAsync(webhookUrl, content);
+            var responseBody = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
             {
                 Message.Set(context, "Responsável atribuído com sucesso.");
+
+                Message.Set(context, $"Sucesso|Detalhes da resposta: Status =>{response.StatusCode} | body => {responseBody}");
             }
             else
             {
-                Message.Set(context, "Erro ao atribuir responsável.");
+                Message.Set(context, $"Erro: statuscode=>{response.StatusCode} |error => {responseBody}");
             }
         }
 

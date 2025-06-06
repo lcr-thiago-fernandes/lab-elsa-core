@@ -2,12 +2,17 @@
 using System.Text.Json;
 using Elsa.Workflows;
 using Elsa.Workflows.Attributes;
+using Elsa.Workflows.Models;
+using Elsa.Extensions;
 
 namespace Elsa.Server.Web.Customs.Luceredesk;
 
 [Activity("Lucere", "Alterar situação do chamado", DisplayName = "Alterar situação Chamado")]
 public class AlterarSituacaoChamado : Activity
 {
+
+    public Output<string> Message { get; set; } = default!;
+
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
         var config = context.WorkflowExecutionContext.ServiceProvider.GetRequiredService<IConfiguration>();
@@ -47,14 +52,15 @@ public class AlterarSituacaoChamado : Activity
             var jsonPayload = JsonSerializer.Serialize(payload);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             var response = await httpClient.PostAsync(webhookUrl, content);
+            var responseBody = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine("Webhook triggered successfully.");
+                Message.Set(context, $"Sucesso|Detalhes da resposta: Status =>{response.StatusCode} | body => {responseBody}");
             }
             else
             {
-                Console.WriteLine("Failed to trigger webhook.");
+                Message.Set(context, $"Erro: statuscode=>{response.StatusCode} |error => {responseBody}");
             }
         }
 
