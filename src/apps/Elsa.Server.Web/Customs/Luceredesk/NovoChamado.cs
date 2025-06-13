@@ -79,63 +79,70 @@ public class NovoChamado : Activity
             .GetChildren()
             .FirstOrDefault(s => s["Id"] == "1")?["Url"];
 
-        var parametros = context.WorkflowInput["Parametros"];
+        //var parametros = context.WorkflowInput["Parametros"];
 
-        if (parametros is IDictionary<string, object> dict)
+        string? tokenUsuario = context.GetVariable<string>("TokenUsuario");
+
+        if (string.IsNullOrEmpty(tokenUsuario))
         {
-            string? tokenUsuario = context.WorkflowInput["TokenUsuario"]?.ToString();
+            tokenUsuario = context.WorkflowInput["TokenUsuario"]?.ToString();
             context.SetVariable("TokenUsuario", tokenUsuario);
+        }
 
-            string? sistemaId = context.WorkflowInput["SistemaId"]?.ToString();
+        string? sistemaId = context.GetVariable<string>("SistemaId");
+        if (string.IsNullOrEmpty(sistemaId))
+        {
+            sistemaId = context.WorkflowInput["SistemaId"]?.ToString();
+            context.SetVariable("SistemaId", tokenUsuario);
+        }        
 
-            var inputTitulo = (string)Titulo.Expression.Value;
-            var inputDescricao = (string)Descricao.Expression.Value;
-            var inputTipo = (from tipo in _tipos where tipo.Key == (string)Tipo.Expression.Value select tipo.Value).First();
-            var inputCatalogo = (from ct in _catalogos where ct.Key == (string)Catalogo.Expression.Value select ct.Value).First();
+        var inputTitulo = (string)Titulo.Expression.Value;
+        var inputDescricao = (string)Descricao.Expression.Value;
+        var inputTipo = (from tipo in _tipos where tipo.Key == (string)Tipo.Expression.Value select tipo.Value).First();
+        var inputCatalogo = (from ct in _catalogos where ct.Key == (string)Catalogo.Expression.Value select ct.Value).First();
 
-            var payload = new
+        var payload = new
+        {
+            Event = "NovoChamado",
+            Chamado = new
             {
-                Event = "NovoChamado",
-                Chamado = new
-                {
-                    TipoId = inputTipo,
-                    Numero = 0,//
-                    Backlog = false,//
-                    Titulo = inputTitulo,
-                    Descricao = inputDescricao,
-                    ItemCatalogoId = inputCatalogo,
-                    ItemRelacionadoId = (Guid?)null,//
-                    Tags = "",//
-                    SolicitanteNome = "Thiago Fernandes",//
-                    SolicitanteEmail = "thiago.fernades@lucere.com.br"//
-                }
-            };
-
-            using var httpClient = new HttpClient();
-
-            if (!string.IsNullOrEmpty(tokenUsuario))
-            {
-                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenUsuario}");
+                TipoId = inputTipo,
+                Numero = 0,//
+                Backlog = false,//
+                Titulo = inputTitulo,
+                Descricao = inputDescricao,
+                ItemCatalogoId = inputCatalogo,
+                ItemRelacionadoId = (Guid?)null,//
+                Tags = "",//
+                SolicitanteNome = "Thiago Fernandes",//
+                SolicitanteEmail = "thiago.fernades@lucere.com.br"//
             }
+        };
 
-            if (!string.IsNullOrEmpty(sistemaId))
-            {
-                httpClient.DefaultRequestHeaders.Add("Sistema-Id", sistemaId);
-            }
+        using var httpClient = new HttpClient();
 
-            var jsonPayload = JsonSerializer.Serialize(payload);
-            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            var response = await httpClient.PostAsync(webhookUrl, content);
-            var responseBody = await response.Content.ReadAsStringAsync();
+        if (!string.IsNullOrEmpty(tokenUsuario))
+        {
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenUsuario}");
+        }
 
-            if (response.IsSuccessStatusCode)
-            {                
-                Message.Set(context, $"Sucesso|Detalhes da resposta: Status =>{response.StatusCode} | body => {responseBody}");
-            }
-            else
-            {
-                Message.Set(context, $"Erro: statuscode=>{response.StatusCode} |error => {responseBody}");
-            }
+        if (!string.IsNullOrEmpty(sistemaId))
+        {
+            httpClient.DefaultRequestHeaders.Add("Sistema-Id", sistemaId);
+        }
+
+        var jsonPayload = JsonSerializer.Serialize(payload);
+        var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(webhookUrl, content);
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        if (response.IsSuccessStatusCode)
+        {
+            Message.Set(context, $"Sucesso|Detalhes da resposta: Status =>{response.StatusCode} | body => {responseBody}");
+        }
+        else
+        {
+            Message.Set(context, $"Erro: statuscode=>{response.StatusCode} |error => {responseBody}");
         }
 
         await context.CompleteActivityAsync();

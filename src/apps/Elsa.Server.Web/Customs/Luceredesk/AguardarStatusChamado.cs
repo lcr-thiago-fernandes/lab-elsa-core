@@ -57,6 +57,11 @@ public class AguardarStatusChamado : HttpEndpointBase
             context.SetVariable("TokenUsuario", tokenUsuario.GetString());
         }
 
+        if(root.TryGetProperty("SistemaId", out var sistemaId))
+        {
+            context.SetVariable("SistemaId", sistemaId.GetString());
+        }
+
         if (root.TryGetProperty("statusNome", out var statusNomeElement))
         {
             var statusNome = statusNomeElement.GetString();
